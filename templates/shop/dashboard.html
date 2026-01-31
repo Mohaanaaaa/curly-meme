@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Print Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-8">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-10 bg-slate-800/50 p-6 rounded-[30px] border border-slate-700/50">
+            <div>
+                <h1 class="text-2xl font-black text-white">SHOP TERMINAL</h1>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Active Print Queue</p>
+            </div>
+            <a href="/shop/home" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-house text-xs"></i> HOME
+            </a>
+        </div>
+
+        <div class="bg-slate-800 rounded-[40px] border border-slate-700 overflow-hidden shadow-2xl">
+            <table class="w-full text-left">
+                <thead class="bg-slate-700/50 text-slate-400 text-[10px] uppercase font-black tracking-widest">
+                    <tr>
+                        <th class="p-6">Pickup Code</th>
+                        <th class="p-6 text-center">Format</th>
+                        <th class="p-6">Job Details</th>
+                        <th class="p-6 text-center">Time Left</th>
+                        <th class="p-6 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr class="border-t border-slate-700/50 hover:bg-slate-750/50 transition-colors">
+                        <td class="p-6 font-mono text-2xl font-black text-blue-400">{{ job.pickup_code }}</td>
+                        <td class="p-6 text-center">
+                            <span class="bg-slate-700 text-slate-300 text-[10px] font-black px-2 py-1 rounded">
+                                {{ job.extension }}
+                            </span>
+                        </td>
+                        <td class="p-6 text-sm font-bold text-slate-300">
+                            {{ "Color" if job.is_color else "B&W" }} • {{ job.copies }} Copies
+                        </td>
+                        <td class="p-6 text-center">
+                            <span class="text-sm font-black {% if job.minutes_left < 5 %}text-red-500{% else %}text-amber-500{% endif %}">
+                                {{ job.minutes_left }}m
+                            </span>
+                        </td>
+                        <td class="p-6 text-right">
+                            <a href="/download/{{ job.file_path }}" target="_blank" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl font-black text-xs shadow-lg shadow-green-900/20 inline-block">
+                                PRINT
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="p-20 text-center text-slate-500 font-bold uppercase tracking-widest text-xs">
+                            No pending print jobs
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+        <script>
+            // Audio alert for new orders
+            const notifySound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+            let lastJobCount = {{ jobs|length }};
+            let isFirstLoad = true;
+
+            async function refreshDashboard() {
+                try {
+                    // Fetches the latest jobs from the existing API
+                    const response = await fetch('/api/active-jobs');
+                    const jobs = await response.json();
+                    
+                    // Notification: Play sound if a new job arrives
+                    if (!isFirstLoad && jobs.length > lastJobCount) {
+                        notifySound.play().catch(e => console.log("Sound blocked: Click the page once."));
+                    }
+                    
+                    lastJobCount = jobs.length;
+                    isFirstLoad = false;
+
+                    // Update Table Body dynamically
+                    const tableBody = document.getElementById('jobTable');
+                    tableBody.innerHTML = jobs.map(job => `
+                        <tr class="border-t border-slate-700/50 hover:bg-slate-800/50 transition-colors">
+                            <td class="p-6 font-mono text-2xl font-black text-blue-400">${job.code}</td>
+                            <td class="p-6 text-center">
+                                <span class="bg-slate-700 text-slate-300 text-[10px] font-black px-3 py-1 rounded-md">
+                                    ${job.file_path.split('.').pop().toUpperCase()}
+                                </span>
+                            </td>
+                            <td class="p-6 text-sm font-bold text-slate-400">
+                                ${job.is_color} • ${job.copies} Copies
+                            </td>
+                            <td class="p-6 text-center">
+                                <span class="text-sm font-black ${parseInt(job.time_left) < 5 ? 'text-red-500 animate-pulse' : 'text-amber-500'}">
+                                    ${job.time_left}
+                                </span>
+                            </td>
+                            <td class="p-6 text-right">
+                                <a href="/download/${job.file_path}" target="_blank" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl font-black text-xs shadow-lg shadow-green-900/20">
+                                    PRINT
+                                </a>
+                            </td>
+                        </tr>
+                    `).join('');
+                } catch (err) { 
+                    console.error("Auto-Refresh Error:", err); 
+                }
+            }
+
+            // Automatically runs every 5 seconds so shopkeepers don't need to hit F5
+            setInterval(refreshDashboard, 5000);
+            
+        </script>
+    </body>
+</html>
