@@ -7,93 +7,135 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .step-hidden { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col items-center p-4">
+<body class="bg-slate-50 min-h-screen flex flex-col items-center p-4 font-sans">
 
     <div class="w-full max-w-md text-center my-6">
-        <h1 class="text-3xl font-extrabold text-slate-800">Secure Print</h1>
+        <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Secure Print</h1>
+        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Smart Terminal</p>
     </div>
 
-    <div class="w-full max-w-md bg-white p-6 rounded-3xl shadow-xl mb-4 border border-slate-100">
-        <div id="dropZone" class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center cursor-pointer hover:border-blue-400 transition-all" onclick="document.getElementById('fileInput').click()">
-            <i class="fa-solid fa-file-pdf text-4xl text-blue-500 mb-2"></i>
-            <p id="fileName" class="text-slate-700 font-bold">Tap to select document</p>
-            <input type="file" name="file" id="fileInput" form="mainForm" class="hidden" required>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-3 mt-4">
-            <select name="color" form="mainForm" class="bg-slate-50 p-3 rounded-xl border text-sm outline-none">
-                <option value="bw">B&W</option>
-                <option value="color">Color</option>
-            </select>
-            <input type="number" name="copies" form="mainForm" value="1" min="1" class="bg-slate-50 p-3 rounded-xl border text-sm outline-none">
-        </div>
-    </div>
-
-    <div class="w-full max-w-md flex bg-slate-200 p-1 rounded-2xl mb-4">
-        <button type="button" onclick="setMode('manual')" id="btn-manual" class="flex-1 py-3 rounded-xl font-bold text-sm bg-white shadow text-blue-600 transition-all">Manual</button>
-        <button type="button" onclick="setMode('scan')" id="btn-scan" class="flex-1 py-3 rounded-xl font-bold text-sm text-slate-600 transition-all">Smart Scan</button>
-    </div>
-
-    <div class="w-full max-w-md">
-        <form id="mainForm" action="/upload" method="POST" enctype="multipart/form-data">
-            <div id="manual-section" class="bg-white p-4 rounded-3xl shadow-lg border">
-                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition-all">
-                    GENERATE PICKUP CODE
-                </button>
+    <div class="w-full max-w-md bg-white p-6 rounded-[35px] shadow-xl border border-slate-100 mb-4">
+        <div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-3xl p-8 text-center cursor-pointer hover:border-blue-400 transition-all bg-slate-50/50" onclick="document.getElementById('fileInput').click()">
+            <div class="bg-blue-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
+                <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
             </div>
-        </form>
-
-        <div id="scan-section" class="hidden bg-white p-4 rounded-3xl shadow-lg border">
-            <div id="reader" class="rounded-2xl overflow-hidden border-4 border-blue-500 bg-black aspect-square mb-3"></div>
-            <p class="text-center text-blue-600 font-bold animate-pulse text-sm">SCAN SHOP QR TO DROP FILE</p>
+            <p id="fileName" class="text-slate-600 font-bold text-lg">Step 1: Select Document</p>
+            <p class="text-slate-400 text-xs mt-1">PDF, JPG, or PNG files supported</p>
         </div>
     </div>
+
+    <form id="mainForm" method="POST" enctype="multipart/form-data" class="w-full max-w-md">
+        <input type="file" id="fileInput" name="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+
+        <div id="proOptions" class="step-hidden fade-in space-y-4">
+            
+            <div class="bg-white p-6 rounded-[35px] shadow-lg border border-slate-100">
+                <label class="block text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">Step 2: Color Mode</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex-1">
+                        <input type="radio" name="color" value="bw" class="hidden peer" checked>
+                        <div class="py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-600 text-center font-bold text-slate-500 transition-all">
+                            B&W
+                        </div>
+                    </label>
+                    <label class="flex-1">
+                        <input type="radio" name="color" value="color" class="hidden peer">
+                        <div class="py-4 rounded-2xl border-2 border-slate-100 bg-slate-50 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-600 text-center font-bold text-slate-500 transition-all">
+                            Color
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-[35px] shadow-lg border border-slate-100">
+                <label class="block text-slate-400 text-[10px] font-black uppercase tracking-widest mb-4">Step 3: Number of Copies</label>
+                <div class="flex items-center justify-between bg-slate-50 p-2 rounded-2xl border border-slate-100">
+                    <button type="button" onclick="changeCopies(-1)" class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-600"><i class="fa-solid fa-minus"></i></button>
+                    <input type="number" id="copiesCount" name="copies" value="1" min="1" class="bg-transparent text-center text-2xl font-black text-slate-800 w-20 outline-none">
+                    <button type="button" onclick="changeCopies(1)" class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-600"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-[35px] shadow-lg border border-slate-100">
+                <div class="flex gap-2 p-1 bg-slate-100 rounded-2xl mb-6">
+                    <button type="button" id="btnManual" onclick="switchMode('manual')" class="flex-1 py-3 rounded-xl font-bold text-sm bg-white shadow text-blue-600 transition-all">Drop to Shop</button>
+                    <button type="button" id="btnScan" onclick="switchMode('scan')" class="flex-1 py-3 rounded-xl font-bold text-sm text-slate-500 transition-all">Scan to Drop</button>
+                </div>
+
+                <div id="manualSection">
+                    <button type="submit" onclick="setManualAction()" class="w-full bg-blue-600 hover:bg-blue-500 text-white p-5 rounded-2xl font-black text-lg shadow-xl shadow-blue-200 transition-all">
+                        SEND TO TERMINAL
+                    </button>
+                </div>
+
+                <div id="scanSection" class="hidden">
+                    <div id="reader" class="overflow-hidden rounded-2xl border-2 border-slate-200"></div>
+                    <p class="text-[10px] text-slate-400 font-bold mt-4 uppercase">Scan the QR on the Shop Terminal</p>
+                </div>
+            </div>
+        </div>
+    </form>
 
     <script>
         let html5QrCode = null;
 
-        function setMode(mode) {
-            const manualSec = document.getElementById('manual-section');
-            const scanSec = document.getElementById('scan-section');
-            const btnManual = document.getElementById('btn-manual');
-            const btnScan = document.getElementById('btn-scan');
+        // Function to show options after file selection
+        document.getElementById('fileInput').onchange = function() {
+            if (this.files[0]) {
+                document.getElementById('fileName').innerText = "File Selected: " + this.files[0].name;
+                document.getElementById('fileName').classList.replace('text-slate-600', 'text-blue-600');
+                document.getElementById('dropZone').classList.add('border-blue-400', 'bg-blue-50/30');
+                
+                // SHOW NEXT STEPS
+                document.getElementById('proOptions').style.display = 'block';
+            }
+        };
+
+        function changeCopies(val) {
+            const input = document.getElementById('copiesCount');
+            let current = parseInt(input.value);
+            if (current + val >= 1) input.value = current + val;
+        }
+
+        function switchMode(mode) {
+            const manualSec = document.getElementById('manualSection');
+            const scanSec = document.getElementById('scanSection');
+            const btnManual = document.getElementById('btnManual');
+            const btnScan = document.getElementById('btnScan');
 
             if (mode === 'scan') {
                 manualSec.classList.add('hidden');
                 scanSec.classList.remove('hidden');
                 btnScan.className = "flex-1 py-3 rounded-xl font-bold text-sm bg-white shadow text-blue-600";
-                btnManual.className = "flex-1 py-3 rounded-xl font-bold text-sm text-slate-600";
+                btnManual.className = "flex-1 py-3 rounded-xl font-bold text-sm text-slate-500";
                 startScanner();
             } else {
                 manualSec.classList.remove('hidden');
                 scanSec.classList.add('hidden');
                 btnManual.className = "flex-1 py-3 rounded-xl font-bold text-sm bg-white shadow text-blue-600";
-                btnScan.className = "flex-1 py-3 rounded-xl font-bold text-sm text-slate-600";
-                if(html5QrCode) html5QrCode.stop().catch(e => console.log(e));
+                btnScan.className = "flex-1 py-3 rounded-xl font-bold text-sm text-slate-500";
+                if(html5QrCode) html5QrCode.stop();
             }
+        }
+
+        function setManualAction() {
+            document.getElementById('mainForm').action = "/drop/shop1"; 
         }
 
         function startScanner() {
             html5QrCode = new Html5Qrcode("reader");
             html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: 250 }, (decodedText) => {
-                const fileInput = document.getElementById('fileInput');
-                if (fileInput.files.length === 0) {
-                    alert("Please select a document at the top first!");
-                    return;
-                }
                 const form = document.getElementById('mainForm');
                 form.action = decodedText; 
                 form.submit();
             });
         }
-
-        document.getElementById('fileInput').onchange = function() {
-            if (this.files[0]) {
-                document.getElementById('fileName').innerText = "Selected: " + this.files[0].name;
-                document.getElementById('dropZone').classList.add('bg-blue-50', 'border-blue-400');
-            }
-        };
     </script>
 </body>
 </html>
