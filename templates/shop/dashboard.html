@@ -47,75 +47,63 @@
                             </span>
                         </td>
                         <td class="p-6 text-right">
-                            <a href="/download/{{ job.file_path }}" target="_blank" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl font-black text-xs shadow-lg shadow-green-900/20 inline-block">
+                            <button onclick="triggerPrint('/download/{{ job.file_path }}')" 
+                                    class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl font-black text-xs shadow-lg shadow-green-900/20">
                                 PRINT
-                            </a>
+                            </button>
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="5" class="p-20 text-center text-slate-500 font-bold uppercase tracking-widest text-xs">
-                            No pending print jobs
-                        </td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
+        
         <script>
-            // Audio alert for new orders
-            const notifySound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
-            let lastJobCount = {{ jobs|length }};
-            let isFirstLoad = true;
+    const notifySound = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+    let lastJobCount = 0;
+    let isFirstLoad = true;
 
-            async function refreshDashboard() {
-                try {
-                    // Fetches the latest jobs from the existing API
-                    const response = await fetch('/api/active-jobs');
-                    const jobs = await response.json();
-                    
-                    // Notification: Play sound if a new job arrives
-                    if (!isFirstLoad && jobs.length > lastJobCount) {
-                        notifySound.play().catch(e => console.log("Sound blocked: Click the page once."));
-                    }
-                    
-                    lastJobCount = jobs.length;
-                    isFirstLoad = false;
+    // Direct Printing Function
+    function triggerPrint(url) {
+        const printWin = window.open(url, '_blank');
+        printWin.onload = function() {
+            printWin.focus();
+            printWin.print();
+        };
+    }
 
-                    // Update Table Body dynamically
-                    const tableBody = document.getElementById('jobTable');
-                    tableBody.innerHTML = jobs.map(job => `
-                        <tr class="border-t border-slate-700/50 hover:bg-slate-800/50 transition-colors">
-                            <td class="p-6 font-mono text-2xl font-black text-blue-400">${job.code}</td>
-                            <td class="p-6 text-center">
-                                <span class="bg-slate-700 text-slate-300 text-[10px] font-black px-3 py-1 rounded-md">
-                                    ${job.file_path.split('.').pop().toUpperCase()}
-                                </span>
-                            </td>
-                            <td class="p-6 text-sm font-bold text-slate-400">
-                                ${job.is_color} • ${job.copies} Copies
-                            </td>
-                            <td class="p-6 text-center">
-                                <span class="text-sm font-black ${parseInt(job.time_left) < 5 ? 'text-red-500 animate-pulse' : 'text-amber-500'}">
-                                    ${job.time_left}
-                                </span>
-                            </td>
-                            <td class="p-6 text-right">
-                                <a href="/download/${job.file_path}" target="_blank" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl font-black text-xs shadow-lg shadow-green-900/20">
-                                    PRINT
-                                </a>
-                            </td>
-                        </tr>
-                    `).join('');
-                } catch (err) { 
-                    console.error("Auto-Refresh Error:", err); 
-                }
-            }
-
-            // Automatically runs every 5 seconds so shopkeepers don't need to hit F5
-            setInterval(refreshDashboard, 5000);
+    async function refreshDashboard() {
+        try {
+            const response = await fetch('/api/active-jobs');
+            const jobs = await response.json();
             
-        </script>
+            if (!isFirstLoad && jobs.length > lastJobCount) {
+                notifySound.play().catch(e => console.log("Sound blocked"));
+            }
+            lastJobCount = jobs.length;
+            isFirstLoad = false;
+
+            const tableBody = document.getElementById('jobTable');
+            // FIXED: Using correct template literal syntax and triggerPrint
+            tableBody.innerHTML = jobs.map(job => `
+                <tr class="border-t border-slate-700 hover:bg-slate-750 transition-colors">
+                    <td class="p-5 font-mono text-xl font-bold text-blue-400">${job.code}</td>
+                    <td class="p-5 text-sm">${job.is_color} • ${job.copies} Copies</td>
+                    <td class="p-5 text-sm text-amber-500 font-bold">${job.time_left}</td>
+                    <td class="p-5 text-right">
+                        <button onclick="triggerPrint('/download/${job.file_path}')" 
+                                class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-bold text-white shadow-lg">
+                            <i class="fa-solid fa-print mr-2"></i>PRINT
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) { console.error("Refresh Error:", err); }
+    }
+
+    setInterval(refreshDashboard, 5000);
+    refreshDashboard();
+</script>
     </body>
 </html>

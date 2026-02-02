@@ -1,0 +1,34 @@
+secure-print-app/
+├── app/
+│   ├── main.py              # Entry point for the Flask app
+│   ├── models.py            # Database logic (File metadata & codes)
+│   ├── utils/
+│   │   ├── converter.py     # LibreOffice conversion logic
+│   │   └── sanitizer.py     # Security checks & file renaming
+│   ├── static/              # CSS, JS, and Images
+│   │   ├── css/             # Tailwind CSS or custom styles
+│   │   └── js/              # Frontend logic (Drag & Drop)
+│   └── templates/           # HTML Interfaces
+│       ├── customer/        # upload.html, settings.html, ticket.html
+│       └── shop/            # dashboard.html
+├── uploads/                 # TEMPORARY storage for user files
+├── tests/                   # Security and unit tests
+├── .env                     # Secret keys and config variables
+├── requirements.txt         # Python dependencies
+└── config.py                # App configuration (Paths, allowed formats)
+
+
+# Create the main project directory
+mkdir secure-print-app
+cd secure-print-app
+
+# Create the folder structure
+mkdir -p app/static/css app/static/js app/templates/customer app/templates/shop app/utils uploads
+
+# Initialize a virtual environment (Good practice to keep dependencies isolated)
+python -m venv venv
+
+Activate Virtual Environment
+Windows: venv\Scripts\activate
+
+Mac/Linux: source venv/bin/activate
