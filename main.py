@@ -11,6 +11,8 @@ app.config.from_object(Config)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../print_service.db'
 db.init_app(app)
 
+
+
 with app.app_context():
     db.create_all()
 
@@ -19,6 +21,7 @@ def log_to_excel(event, shop, status, filename="", detail=""):
     file_exists = os.path.isfile(path)
     with open(path, 'a', newline='') as f:
         writer = csv.writer(f)
+        # Added 'File Name' column for professional auditing
         if not file_exists:
             writer.writerow(['Timestamp', 'Event', 'Shop', 'Status', 'File Name', 'Detail'])
         writer.writerow([
@@ -39,14 +42,29 @@ def handle_upload():
     db.session.add(new_job); db.session.commit()
     return render_template('customer/ticket.html', code=new_job.pickup_code)
 
-# --- OPTIMIZED UPLOAD (SMART DROP) ---
+
+# 1. This tracks scan timing to block replicas
+recent_scans = {}
+
 @app.route('/drop/<shop_id>', methods=['POST'])
 def smart_drop(shop_id):
     file = request.files.get('file')
     if file and file.filename != '':
+        current_time = time.time()
+        scan_key = f"{shop_id}_{file.filename}"
+        
+        # --- DUPLICATE LOCK WITH REAL TOKEN ---
+        if scan_key in recent_scans:
+            last_time, saved_code = recent_scans[scan_key]
+            # If same file within 10 seconds, show the PREVIOUS token
+            if current_time - last_time < 10:
+                return render_template('customer/ticket.html', code=saved_code)
+        
+        # Save unique file
         fname = f"{uuid.uuid4().hex}_{file.filename}"
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], fname))
         
+        # Create Job
         new_job = PrintJob(
             file_path=fname, 
             is_color=request.form.get('color') == 'color', 
@@ -55,7 +73,11 @@ def smart_drop(shop_id):
         db.session.add(new_job)
         db.session.commit() 
         
+        # Save this specific token to our "Duplicate Lock"
+        recent_scans[scan_key] = (current_time, new_job.pickup_code)
+        
         log_to_excel("SMART_DROP", shop_id, "SUCCESS", file.filename, f"Code: {new_job.pickup_code}")
+        
         return render_template('customer/ticket.html', code=new_job.pickup_code)
     return "No file", 400
 
@@ -68,18 +90,17 @@ def shop_home():
 
 @app.route('/shop')
 def shop_dashboard():
-    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    total = PrintJob.query.filter(PrintJob.created_at >= today).count()
+    # ... previous logic ...
     jobs = PrintJob.query.filter_by(status='pending').order_by(PrintJob.created_at.desc()).all()
-    
-    # Pre-calculate values to avoid Jinja UndefinedError
     now = datetime.now(timezone.utc)
     for j in jobs:
+        # FIXED: This ensures the scan format (PDF/JPG) shows correctly on terminal
+        file_ext = os.path.splitext(j.file_path)[1].replace('.', '').upper()
+        j.extension = file_ext if file_ext else "SCAN"
+        
         expiry = j.expires_at.replace(tzinfo=timezone.utc)
         j.minutes_left = max(0, int((expiry - now).total_seconds() / 60))
-        j.extension = os.path.splitext(j.file_path)[1].replace('.', '').upper()
-        
-    return render_template('shop/dashboard.html', jobs=jobs, total_count=total)
+    return render_template('shop/dashboard.html', jobs=jobs)
 
 @app.route('/api/active-jobs')
 def get_active_jobs():
@@ -93,13 +114,12 @@ def get_active_jobs():
         "time_left": f"{max(0, int((j.expires_at.replace(tzinfo=timezone.utc)-now).total_seconds()/60))}m"
     } for j in jobs])
 
-# Ensure the download route prevents auto-downloads
 @app.route('/download/<filename>')
 def download_file(filename):
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if not os.path.exists(file_path):
         abort(404)
-    # as_attachment=False is CRITICAL for direct browser printing
+    # Allows the terminal to print directly
     return send_file(file_path, as_attachment=False)
 
 def start_cleanup_daemon(app):
