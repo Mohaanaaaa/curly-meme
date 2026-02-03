@@ -39,6 +39,7 @@ A professional Flask-based print management solution for retail shops. It allows
    ```
 
 **🛡️ Security & Privacy**
+
   UUID Renaming: Every file is renamed with a unique UUID to prevent file overwriting and protect identity.
   10-Minute Expiry: Files are strictly deleted from the server 10 minutes after being uploaded.
   Duplicate Lock: A server-side recent_scans dictionary blocks rapid-fire requests from faulty scanner hardware.
