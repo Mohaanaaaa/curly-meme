@@ -32,7 +32,7 @@ A professional Flask-based print management solution for retail shops. It allows
    ```bash
    python main.py
    ```
-3.**Access:**
+3. **Access:**
    ```bash
    Customer Portal: http://localhost:5000/
    Shop Terminal: http://localhost:5000/shop
