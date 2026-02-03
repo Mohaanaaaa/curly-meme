@@ -1,36 +1,35 @@
-**🚀 Secure Print: Smart Terminal System**
-    A professional, end-to-end print management solution designed for shops. It allows customers to "drop" documents to a local terminal via manual upload or a Smart Scan-to-Drop feature.
+# 🚀 Secure Print Smart Terminal
 
-**📋 Key Features**
-    Step-by-Step UI Flow: A clean, guided customer interface where Color Mode and Copies options only appear after a document is selected.
-    Intelligent Replica Prevention: Prevents duplicate print jobs. If a scanner sends the same file multiple times, the server detects the replica, blocks a new entry, and returns the        original token to the customer.
-    Live Shop Terminal: A real-time dashboard for shopkeepers featuring color-coded status badges, auto-refreshing queues, and direct browser printing.
-    Automated Audit Logs: Every successful print job is recorded in a print_shop_logs.csv with original filenames and timestamps for business reconciliation.
-    Auto-Cleanup Daemon: A background thread that automatically deletes files and database entries older than 10 minutes to protect customer privacy.
+A professional Flask-based print management solution for retail shops. It allows customers to "drop" documents to a local shop terminal via manual upload or a QR-based **Scan-to-Drop** feature.
 
-**🛠️ Technical Stack**
-    Component Technology
-    Backend      Python / Flask
-    Database     SQLite / SQLAlchemy
-    Frontend     Tailwind CSS / FontAwesome
-    QR Scanning  Html5-QRCode
-    Logging      CSV Audit Trail
 
-**📂 Project Structure**
-  main.py: The core engine handling file storage, duplicate prevention, and the print queue.
-  upload.html: The customer-facing progressive disclosure interface.
-  dashboard.html: The shop terminal queue with direct-print integration.
-  home.html: Administrative overview showing total print volume for the day.
 
- ** 🔧 Installation & Setup**
-   Clone the Repository:
-   git clone https://github.com/your-username/secure-print.git
-   cd secure-print
+## ✨ Key Features
 
-   Install Dependencies:
+* **Progressive Disclosure UI**: A clean step-by-step customer flow. Print options (Color, Copies) are hidden until a document is selected.
+* **Intelligent Replica Prevention**: A server-side time-lock prevents duplicate print jobs from faulty scanners while ensuring the customer sees their correct token.
+* **Live Shop Terminal**: A real-time queue for shopkeepers with color-coded status badges, auto-refreshing lists, and direct browser printing.
+* **Auto-Cleanup**: A background daemon automatically deletes documents and database entries older than 10 minutes to protect customer privacy.
+* **Audit Logging**: Every transaction is logged to `print_shop_logs.csv` for business reports.
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+| :--- | :--- |
+| **Backend** | Python / Flask |
+| **Database** | SQLite / SQLAlchemy |
+| **Frontend** | Tailwind CSS / FontAwesome |
+| **QR Engine** | Html5-QRCode |
+
+## 🔧 Setup & Installation
+
+1. **Clone & Install**:
+   ```bash
+   git clone [https://github.com/your-username/secure-print.git](https://github.com/your-username/secure-print.git)
    pip install flask flask-sqlalchemy
 
-   Run the Application:
+2. **Run the Application**:
+  ```bash
    python main.py
 
    Customer Portal: http://localhost:5000/
