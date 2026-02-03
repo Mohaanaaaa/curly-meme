@@ -1,48 +1,44 @@
-Secure Print: Smart Shop Terminal
-A professional Flask-based print management system that allows customers to "drop" files to a shop terminal via manual upload or a QR-based Scan-to-Drop feature.
+**🚀 Secure Print: Smart Terminal System**
+    A professional, end-to-end print management solution designed for shops. It allows customers to "drop" documents to a local terminal via manual upload or a Smart Scan-to-Drop feature.
 
-🚀 Key Features
-Step-by-Step Customer UI: A guided interface where options (Color Mode, Copies) only appear after a document is selected.
+**📋 Key Features**
+    Step-by-Step UI Flow: A clean, guided customer interface where Color Mode and Copies options only appear after a document is selected.
+    Intelligent Replica Prevention: Prevents duplicate print jobs. If a scanner sends the same file multiple times, the server detects the replica, blocks a new entry, and returns the        original token to the customer.
+    Live Shop Terminal: A real-time dashboard for shopkeepers featuring color-coded status badges, auto-refreshing queues, and direct browser printing.
+    Automated Audit Logs: Every successful print job is recorded in a print_shop_logs.csv with original filenames and timestamps for business reconciliation.
+    Auto-Cleanup Daemon: A background thread that automatically deletes files and database entries older than 10 minutes to protect customer privacy.
 
-Scan-to-Drop: Customers can scan a shop-specific QR code to instantly send their document to the terminal.
+**🛠️ Technical Stack**
+    Component Technology
+    Backend      Python / Flask
+    Database     SQLite / SQLAlchemy
+    Frontend     Tailwind CSS / FontAwesome
+    QR Scanning  Html5-QRCode
+    Logging      CSV Audit Trail
 
-Duplicate & Replica Prevention: A server-side "Time-Lock" ensures that if a scanner sends the same file multiple times, only one unique print job is created while still showing the customer their correct token.
+**📂 Project Structure**
+  main.py: The core engine handling file storage, duplicate prevention, and the print queue.
+  upload.html: The customer-facing progressive disclosure interface.
+  dashboard.html: The shop terminal queue with direct-print integration.
+  home.html: Administrative overview showing total print volume for the day.
 
-Real-Time Shop Dashboard: Shopkeepers see a live queue with file formats (PDF, JPG, PNG), color settings, and a 10-minute auto-expiry timer.
+ ** 🔧 Installation & Setup**
+   Clone the Repository:
+   git clone https://github.com/your-username/secure-print.git
+   cd secure-print
 
-Direct Browser Printing: Integrated "Print" button that triggers the native browser print dialog without requiring a file download.
+   Install Dependencies:
+   pip install flask flask-sqlalchemy
 
-Audit Logging: Every transaction is logged into a print_shop_logs.csv file with timestamps, filenames, and pickup codes for end-of-day reconciliation.
+   Run the Application:
+   python main.py
 
-🛠️ Technical Implementation
-Duplicate Lock Logic
-To handle high-speed scanners that might trigger multiple requests, the system uses a global recent_scans tracker. It stores the (timestamp, pickup_code) for every unique scan. If a duplicate arrives within 10 seconds, the system fetches the existing code instead of creating a new database entry.
+   Customer Portal: http://localhost:5000/
+   Shop Terminal: http://localhost:5000/shop
 
-Progressive Disclosure UI
-The frontend uses Tailwind CSS and JavaScript to manage state. The proOptions container is hidden by default and only transitions to display: block once the fileInput detects a selected document.
+**🛡️ Security & Privacy**
+  UUID Renaming: Every file is renamed with a unique UUID to prevent file overwriting and protect identity.
+  10-Minute Expiry: Files are strictly deleted from the server 10 minutes after being uploaded.
+  Duplicate Lock: A server-side recent_scans dictionary blocks rapid-fire requests from faulty scanner hardware.
 
-📁 Project Structure
-main.py: The Flask backend containing the duplicate prevention logic and print queue management.
-
-upload.html: The customer-facing step-by-step upload and scan interface.
-
-dashboard.html: The shopkeeper’s terminal for managing active print jobs.
-
-home.html: An administrative view showing total prints today and audit logs.
-
-🔧 Setup
-Install Requirements: Ensure Flask and SQLAlchemy are installed.
-
-Initialize Database: The system automatically creates print_service.db on the first run.
-
-Run the Server:
-Bash
-python main.py
-
-Access Terminal:
-Customer Upload: http://localhost:5000/
-Shop Dashboard: http://localhost:5000/shop
-
-Customer Upload: http://localhost:5000/
-
-Shop Dashboard: http://localhost:5000/shop
+  
