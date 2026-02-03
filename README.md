@@ -44,4 +44,8 @@ A professional Flask-based print management solution for retail shops. It allows
   10-Minute Expiry: Files are strictly deleted from the server 10 minutes after being uploaded.
   Duplicate Lock: A server-side recent_scans dictionary blocks rapid-fire requests from faulty scanner hardware.
 
+## 🏪 Shop-Specific QR Workflow
+Each shop is assigned a unique persistent URL (`/drop/shop_id`). 
+- **Scanning the Shop QR**: Directs customers to a specialized version of the UI.
+- **Smart Logic**: Automatically disables internal QR scanning if a Shop ID is detected in the URL, forcing a "Drop to Shop" manual submission for better UX.
   
