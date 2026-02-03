@@ -28,12 +28,15 @@ A professional Flask-based print management solution for retail shops. It allows
    git clone [https://github.com/your-username/secure-print.git](https://github.com/your-username/secure-print.git)
    pip install flask flask-sqlalchemy
 
-2. **Run the Application**:
-  ```bash
+2. **Run Server:**:
+   ```bash
    python main.py
-
+   ```
+3.**Access:**
+   ```bash
    Customer Portal: http://localhost:5000/
    Shop Terminal: http://localhost:5000/shop
+   ```
 
 **🛡️ Security & Privacy**
   UUID Renaming: Every file is renamed with a unique UUID to prevent file overwriting and protect identity.
