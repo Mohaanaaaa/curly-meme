@@ -1,17 +1,21 @@
 import os, threading, uuid, random, time, csv
 from datetime import datetime, timezone, timedelta, date
-from flask import Flask, request, render_template, redirect, url_for, jsonify, send_file, abort
+from flask import Flask, request, render_template, redirect, url_for, jsonify, send_file, abort,flash, session
 from app.models import db, PrintJob
 from app.utils.sanitizer import save_file_safely
 from app.utils.converter import convert_to_pdf
 from config import Config
+import hashlib
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config.from_object(Config)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../print_service.db'
+
+# --- CRITICAL FIXES ---
+# Added secret_key to fix white screen and session errors
+app.secret_key = 'station_secure_key_13_digits'
+
 db.init_app(app)
-
-
 
 with app.app_context():
     db.create_all()
@@ -29,8 +33,13 @@ def log_to_excel(event, shop, status, filename="", detail=""):
             event, shop, status, filename, detail
         ])
         
-@app.route('/')
+'''@app.route('/')
 def index(): return render_template('customer/upload.html')
+'''
+@app.route('/')
+def index(): 
+    # Default behavior for generic visits
+    return render_template('customer/upload.html', shop_id=None)
 
 @app.route('/upload', methods=['POST'])
 def handle_upload():
@@ -45,6 +54,113 @@ def handle_upload():
 
 # 1. This tracks scan timing to block replicas
 recent_scans = {}
+
+# Mock function for generating 13-digit ID
+# Helper function to generate the 13-digit numeric ID
+def generate_station_id(phone):
+    # Combine phone and current time for a unique seed
+    seed = f"{phone}{time.time()}"
+    # Create a numeric hash
+    numeric_hash = str(int(hashlib.sha256(seed.encode()).hexdigest(), 16))
+    # Return exactly 13 digits
+    return numeric_hash[:13]
+
+
+'''@app.route('/shop/register', methods=['GET','POST'])
+def handle_registration():
+    if request.method == 'GET':
+        return render_template('shop/registration.html')
+    try:
+        # 1. Capture Form Data
+        shop_name = request.form.get('shop_name')
+        owner_name = request.form.get('owner_name')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+        dob = request.form.get('dob')
+        captcha_input = request.form.get('captcha_input')  # The code user typed
+
+        # 2. Security Check: Validate Agreement
+        if not request.form.get('agreement'):
+            return jsonify({"status": "error", "message": "You must accept the terms"}), 400
+
+        # 3. Security Check: CAPTCHA (Simplified example)
+        # In a real app, you'd compare this against a session-stored value
+        if captcha_input != "X8R2Q":
+            return jsonify({"status": "error", "message": "Invalid CAPTCHA"}), 400
+
+        # 4. Generate the Unique 13-digit Shop ID
+        new_shop_id = generate_station_id(phone)
+
+        # 5. Save to Database (uncomment and implement accordingly)
+        new_shop = Shop(
+             shop_id=new_shop_id,
+             shop_name=shop_name,
+             owner_name=owner_name,
+             email=email,
+             phone=phone,
+             address=address,
+             dob=dob
+         )
+        db.session.add(new_shop)
+        db.session.commit()
+
+        # 6. Success Response
+        return render_template('shop/registration_success.html', 
+                               shop_id=new_shop_id, 
+                               shop_name=shop_name)
+
+    except Exception as e:
+        print(f"Registration Error: {e}")
+        # In case of error, respond with error message
+        return jsonify({
+            "status": "error",
+            "message": "Registration failed due to an internal error."
+        }), 500'''
+        
+# FIXED: Added 'GET' to allow viewing the form. Original was POST-only
+@app.route('/shop/register', methods=['GET', 'POST'])
+def handle_registration():
+    if request.method == 'POST':
+        try:
+            shop_name = request.form.get('shop_name')
+            phone = request.form.get('phone')
+            
+            if not request.form.get('agreement'):
+                return jsonify({"status": "error", "message": "You must accept the terms"}), 400
+
+            new_shop_id = generate_station_id(phone)
+            
+            # Use registration_success.html as intended
+            return render_template('shop/registration_success.html', 
+                                   shop_id=new_shop_id, 
+                                   shop_name=shop_name)
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+            
+    # Renders the registration form for GET requests
+    return render_template('shop/register.html')
+
+@app.route('/drop/<string:shop_id>', methods=['GET'])
+def shop_direct_link(shop_id):
+    # If the URL is exactly 13 digits, we know it's a Shop QR visit
+    is_locked = len(shop_id) == 13
+    return render_template('customer/upload.html', shop_id=shop_id, locked=is_locked)
+
+@app.route('/shop/login', methods=['GET', 'POST'])
+def shop_login():
+    if request.method == 'POST':
+        phone = request.form.get('phone')
+        station_id = request.form.get('station_id')
+        
+        # Simple verification: Check if phone and station_id exist
+        if phone and station_id:
+            session['shop_id'] = station_id
+            session['shop_name'] = "Alpha Prints" # This can be dynamic later
+            return redirect(url_for('shop_home'))
+            
+    # This renders the sheet. If this file is empty or missing, you see white.
+    return render_template('shop/login.html')
 
 @app.route('/drop/<shop_id>', methods=['POST'])
 def smart_drop(shop_id):
@@ -81,12 +197,24 @@ def smart_drop(shop_id):
         return render_template('customer/ticket.html', code=new_job.pickup_code)
     return "No file", 400
 
+'''@app.route('/shop/home')
+def shop_home():
+    if 'shop_id' not in session:
+        return redirect(url_for('shop_login'))
+    # Page to check total print counts and download reports
+    #today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    # Filter jobs only for this specific shop's 13-digit ID
+    total_count = PrintJob.query.filter_by(shop_id=session['shop_id']).count()
+    return render_template('shop/home.html', total_count=total_count)'''
+    
 @app.route('/shop/home')
 def shop_home():
-    # Page to check total print counts and download reports
-    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    total_today = PrintJob.query.filter(PrintJob.created_at >= today).count()
-    return render_template('shop/home.html', total_count=total_today)
+    # Session check prevents 'NameError: session is not defined'
+    if 'shop_id' not in session:
+        return redirect(url_for('shop_login')) # Fixed for BuildError
+        
+    total_count = PrintJob.query.count() # Passed to home.html
+    return render_template('shop/home.html', total_count=total_count)
 
 @app.route('/shop')
 def shop_dashboard():

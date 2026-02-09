@@ -2,29 +2,82 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Administration Home</title>
+    <title>Shop Home - Secure Print</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-6">
-    <div class="max-w-md w-full text-center">
-        <h1 class="text-3xl font-black mb-10 text-white tracking-tight">ADMINISTRATION</h1>
-        
-        <div class="bg-white p-10 rounded-[40px] shadow-2xl mb-6">
-            <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-2">Total Prints Today</p>
-            <h2 class="text-8xl font-black text-slate-900 leading-none">{{ total_count }}</h2>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-black text-white uppercase">{{ session['shop_name'] }}</h1>
+                <p class="text-blue-400 font-mono font-bold tracking-widest">STATION ID: {{ session['shop_id'] }}</p>
+            </div>
+            <a href="/shop/logout" class="text-slate-500 hover:text-red-400 font-bold transition-all">Logout</a>
         </div>
 
-        <div class="bg-slate-800 p-8 rounded-[40px] border border-slate-700 mb-8">
-            <p class="text-slate-400 text-sm mb-5">Daily Audit History</p>
-            <a href="/admin/download-logs" class="bg-blue-600 hover:bg-blue-500 text-white w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
-                <i class="fa-solid fa-file-excel"></i> DOWNLOAD EXCEL
-            </a>
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-10 rounded-[40px] shadow-2xl flex flex-col items-center justify-center">
+                <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-2">Total Prints Today</p>
+                <h2 class="text-8xl font-black text-slate-900 leading-none">{{ total_count }}</h2>
+                <a href="/shop" class="mt-8 bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-2xl font-black transition-all">
+                    OPEN TERMINAL <i class="fa-solid fa- terminal ml-2"></i>
+                </a>
+            </div>
 
-        <a href="/shop" class="text-slate-500 hover:text-white font-bold transition-all inline-flex items-center gap-2">
-            Open Print Terminal <i class="fa-solid fa-arrow-right"></i>
-        </a>
+            <div class="bg-slate-800 p-8 rounded-[40px] border border-slate-700 flex flex-col items-center">
+                <h3 class="text-white font-bold mb-4">Customer Drop-Box</h3>
+                
+                <div id="qrContainer" class="hidden flex flex-col items-center fade-in">
+                    <div id="qrcode" class="p-3 bg-white rounded-2xl mb-4"></div>
+                    <a id="downloadLink" class="text-blue-400 font-bold text-sm hover:underline mb-4">
+                        <i class="fa-solid fa-download"></i> Download PNG
+                    </a>
+                </div>
+
+                <button id="genBtn" onclick="toggleQR()" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-4 rounded-2xl font-bold transition-all">
+                    GENERATE SHOP QR
+                </button>
+                <p class="text-slate-500 text-[10px] uppercase font-black tracking-tighter mt-4 text-center">
+                    Print this QR for your counter to allow instant file drops.
+                </p>
+            </div>
+        </div>
     </div>
+
+    <script>
+        function toggleQR() {
+            const container = document.getElementById('qrContainer');
+            const btn = document.getElementById('genBtn');
+            
+            if(container.classList.contains('hidden')) {
+                // Generate QR
+                const shopUrl = window.location.origin + "/drop/{{ session['shop_id'] }}";
+                new QRCode(document.getElementById("qrcode"), {
+                    text: shopUrl,
+                    width: 160,
+                    height: 160,
+                    colorDark : "#0f172a",
+                    colorLight : "#ffffff"
+                });
+
+                container.classList.remove('hidden');
+                btn.innerText = "HIDE QR CODE";
+                
+                // Prepare Download
+                setTimeout(() => {
+                    const img = document.querySelector('#qrcode img').src;
+                    const dl = document.getElementById('downloadLink');
+                    dl.href = img;
+                    dl.download = "Shop_QR_{{ session['shop_id'] }}.png";
+                }, 300);
+            } else {
+                container.classList.add('hidden');
+                document.getElementById('qrcode').innerHTML = "";
+                btn.innerText = "GENERATE SHOP QR";
+            }
+        }
+    </script>
 </body>
 </html>

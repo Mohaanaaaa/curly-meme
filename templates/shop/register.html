@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shop Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-xl w-full bg-slate-800 p-10 rounded-[40px] border border-slate-700 shadow-2xl">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black text-white uppercase tracking-tight">Register Print Station</h1>
+            <p class="text-slate-400 text-sm mt-2 font-bold uppercase tracking-widest">Create your 13-digit Station ID</p>
+        </div>
+
+        <form action="/shop/register" method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input type="text" name="shop_name" placeholder="Shop Name" required 
+                    class="bg-slate-900 border border-slate-700 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold">
+                <input type="text" name="owner_name" placeholder="Owner Name" required 
+                    class="bg-slate-900 border border-slate-700 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input type="email" name="email" placeholder="Email Address" required 
+                    class="bg-slate-900 border border-slate-700 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold">
+                <input type="tel" name="phone" placeholder="Phone Number" required 
+                    class="bg-slate-900 border border-slate-700 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold">
+            </div>
+
+            <input type="text" name="address" placeholder="Full Shop Address" required 
+                class="w-full bg-slate-900 border border-slate-700 p-4 rounded-2xl outline-none focus:border-blue-500 transition-all font-bold">
+
+            <div class="flex items-center gap-4 bg-slate-900 border border-slate-700 p-4 rounded-2xl">
+                <span class="text-blue-400 font-black tracking-widest text-xl select-none italic">X8R2Q</span>
+                <input type="text" name="captcha_input" placeholder="Enter CAPTCHA" required 
+                    class="flex-1 bg-transparent outline-none font-bold uppercase">
+            </div>
+
+            <div class="flex items-start gap-3">
+                <input type="checkbox" name="agreement" id="agree" required class="mt-1">
+                <label for="agree" class="text-xs text-slate-400 leading-relaxed font-bold">
+                    I agree to the terms of service and acknowledge that I will receive a 13-digit Station ID for my print shop.
+                </label>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-3xl shadow-xl shadow-blue-900/20 transition-all transform hover:-translate-y-1">
+                GENERATE STATION ID
+            </button>
+        </form>
+    </div>
+</body>
+</html>

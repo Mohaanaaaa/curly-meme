@@ -83,6 +83,29 @@
     </form>
 
     <script>
+        // Check if the URL contains a shop_id (meaning they scanned the Shop QR)
+        // Logic to disable scan-to-drop if visiting via Shop QR
+        const isLocked = {{ 'true' if locked else 'false' }};
+        
+        window.onload = function() {
+            if (isLocked) {
+                // Hide the toggle buttons entirely
+                document.getElementById('modeToggleContainer').classList.add('hidden');
+                // Ensure the form points to the specific 13-digit shop ID
+                document.getElementById('mainForm').action = "/drop/{{ shop_id }}";
+            }
+        }
+
+        
+        window.onload = function() {
+            if (isLocked) {
+                // Hide the toggle buttons entirely
+                document.getElementById('modeToggleContainer').classList.add('hidden');
+                // Ensure the form points to the specific 13-digit shop ID
+                document.getElementById('mainForm').action = "/drop/{{ shop_id }}";
+            }
+        }
+        
         let html5QrCode = null;
 
         // Function to show options after file selection

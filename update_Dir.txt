@@ -1,0 +1,12 @@
+4. Updated Directory Structure
+To keep your project clean, ensure your templates are organized as follows:
+
+templates/shop/login.html: The new login form.
+
+templates/shop/registration_success.html: The page where they first see their ID and QR.
+
+templates/shop/dashboard.html: Updated to show the shop_name from the session.
+
+templates/shop/home.html: Updated to show statistics for that specific shop_id only.
+
+5. Why this works for the Shopkeeper

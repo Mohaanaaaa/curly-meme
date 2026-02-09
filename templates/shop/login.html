@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shop Login - Secure Print</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full bg-slate-800 p-10 rounded-[40px] border border-slate-700 shadow-2xl">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black text-white uppercase tracking-tight">Shop Login</h1>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-2">Enter your Station Credentials</p>
+        </div>
+
+        <form action="/shop/login" method="POST" class="space-y-6">
+            <div>
+                <label class="block text-slate-400 text-[10px] font-black uppercase mb-2 ml-2">Phone Number</label>
+                <input type="tel" name="phone" placeholder="Registered Phone" required
+                    class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 px-6 text-white font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+
+            <div>
+                <label class="block text-slate-400 text-[10px] font-black uppercase mb-2 ml-2">13-Digit Station ID</label>
+                <input type="text" name="station_id" placeholder="890XXXXXXXXXX" maxlength="13" required
+                    class="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 px-6 text-white font-mono font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-blue-900/20 transition-all">
+                ACCESS TERMINAL
+            </button>
+        </form>
+
+        <p class="text-center mt-8 text-slate-500 text-sm">
+            Don't have an ID? <a href="/shop/register" class="text-blue-400 font-bold">Register Shop</a>
+        </p>
+    </div>
+</body>
+</html>
