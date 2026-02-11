@@ -14,6 +14,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../print_service.db'
 # --- CRITICAL FIXES ---
 # Added secret_key to fix white screen and session errors
 app.secret_key = 'station_secure_key_13_digits'
+app.config['SESSION_PERMANENT'] = False
+app.config['USE_SESSION_COOKIES'] = True
 
 db.init_app(app)
 
@@ -176,6 +178,7 @@ def shop_login():
         shop = Shop.query.filter_by(shop_id=station_id, phone=phone).first()
         
         if shop:
+            session.permanent = False
             session['shop_id'] = shop.shop_id
             session['shop_name'] = shop.shop_name
             return redirect(url_for('shop_home'))
@@ -276,7 +279,7 @@ def get_active_jobs():
     
 @app.route('/shop/logout')
 def logout():
-    session.clear() # Clears the 13-digit ID from memory
+    session.clear() # Deletes all data from the current session
     return redirect(url_for('shop_login'))
 
 @app.route('/download/<filename>')
