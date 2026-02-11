@@ -172,13 +172,16 @@ def shop_login():
         phone = request.form.get('phone')
         station_id = request.form.get('station_id')
         
-        # Simple verification: Check if phone and station_id exist
-        if phone and station_id:
-            session['shop_id'] = station_id
-            session['shop_name'] = "Alpha Prints" # This can be dynamic later
+        # This now works because Shop is imported
+        shop = Shop.query.filter_by(shop_id=station_id, phone=phone).first()
+        
+        if shop:
+            session['shop_id'] = shop.shop_id
+            session['shop_name'] = shop.shop_name
             return redirect(url_for('shop_home'))
+        else:
+            flash("Invalid Phone or Station ID")
             
-    # This renders the sheet. If this file is empty or missing, you see white.
     return render_template('shop/login.html')
 
 @app.route('/debug/shops')
