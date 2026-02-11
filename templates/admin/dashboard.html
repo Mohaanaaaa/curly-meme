@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Master Admin - Network Status</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl font-black text-white uppercase tracking-tighter">Master Control</h1>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">Global Station Network</p>
+            </div>
+            
+            <div class="flex gap-4">
+                <a href="/master/logout" class="bg-red-500/10 border border-red-500/20 text-red-400 px-6 py-3 rounded-2xl font-black text-xs hover:bg-red-500 hover:text-white transition-all">
+                    <i class="fa-solid fa-power-off mr-2"></i> MASTER LOGOUT
+                </a>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700">
+                <p class="text-slate-500 font-bold uppercase text-xs mb-1">Total Active Stations</p>
+                <h2 class="text-4xl font-black text-white">{{ shops|length }}</h2>
+            </div>
+            <div class="bg-blue-600 p-6 rounded-3xl shadow-xl shadow-blue-900/20">
+                <p class="text-blue-100 font-bold uppercase text-xs mb-1">Platform Total Prints</p>
+                <h2 class="text-4xl font-black text-white">{{ total_jobs }}</h2>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700">
+                <p class="text-slate-500 font-bold uppercase text-xs mb-1">System Status</p>
+                <h2 class="text-4xl font-black text-green-400 font-mono">ONLINE</h2>
+            </div>
+        </div>
+        
+        <div class="bg-slate-800 rounded-[40px] border border-slate-700 overflow-hidden shadow-2xl">
+            <div class="p-8 border-b border-slate-700 flex justify-between items-center">
+                <h3 class="text-xl font-black uppercase">Registered Print Stations</h3>
+                <button class="bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold">Export All Logs</button>
+            </div>
+            <table class="w-full text-left">
+                <thead class="bg-slate-900/50 text-slate-500 uppercase text-[10px] font-black">
+                    <tr>
+                        <th class="px-8 py-4">Station ID</th>
+                        <th class="px-8 py-4">Shop Name</th>
+                        <th class="px-8 py-4">Contact</th>
+                        <th class="px-8 py-4">Location</th>
+                        <th class="px-8 py-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for shop in shops %}
+                    <tr class="hover:bg-slate-700/30 transition-all">
+                        <td class="px-8 py-5 font-mono text-blue-400">{{ shop.shop_id }}</td>
+                        <td class="px-8 py-5 font-bold text-white">{{ shop.shop_name }}</td>
+                        <td class="px-8 py-5 text-sm">{{ shop.phone }}<br><span class="text-xs text-slate-500">{{ shop.email }}</span></td>
+                        <td class="px-8 py-5 text-sm text-slate-400">{{ shop.address }}</td>
+                        <td class="px-8 py-5">
+                            <button class="text-red-400 hover:text-red-300 transition-all"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import os, threading, uuid, random, time, csv
 from datetime import datetime, timezone, timedelta, date
-from flask import Flask, request, render_template, redirect, url_for, jsonify, send_file, abort,flash, session
+from flask import Flask, request, render_template, redirect, url_for, jsonify, send_file, abort,flash, session,send_from_directory
 from app.models import db, PrintJob , Shop
 from app.utils.sanitizer import save_file_safely
 from app.utils.converter import convert_to_pdf
@@ -16,6 +16,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../print_service.db'
 app.secret_key = 'station_secure_key_13_digits'
 app.config['SESSION_PERMANENT'] = False
 app.config['USE_SESSION_COOKIES'] = True
+# Add this near your secret_key
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "master_secure_password_2026"
 
 db.init_app(app)
 
@@ -53,7 +56,42 @@ def handle_upload():
     db.session.add(new_job); db.session.commit()
     return render_template('customer/ticket.html', code=new_job.pickup_code)
 
+@app.route('/master/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['is_master_admin'] = True  # Set the security flag
+            return redirect(url_for('master_admin'))
+        else:
+            flash("Unauthorized Access: Invalid Credentials")
+            
+    return render_template('admin/login.html')
 
+@app.route('/master/admin')
+def master_admin():
+    # SECURITY GATE: Prevents direct URL access
+    if not session.get('is_master_admin'):
+        return redirect(url_for('admin_login'))
+    
+    # If session is valid, fetch data
+    shops = Shop.query.all()
+    total_platform_jobs = PrintJob.query.count()
+    
+    return render_template('admin/dashboard.html', 
+                           shops=shops, 
+                           total_jobs=total_platform_jobs)
+
+# --- MASTER LOGOUT ---
+@app.route('/master/logout')
+def master_logout():
+    session.pop('is_master_admin', None) # Specifically remove admin flag
+    flash("Master Session Closed Successfully")
+    return redirect(url_for('admin_login'))
+
+        
 # 1. This tracks scan timing to block replicas
 recent_scans = {}
 
@@ -196,6 +234,36 @@ def debug_shops():
         "id": s.shop_id, 
         "phone": s.phone
     } for s in shops])
+    
+@app.route('/admin/download-logs')
+def download_daily_report():
+    if 'shop_id' not in session:
+        return redirect(url_for('shop_login'))
+    
+    shop_id = session['shop_id']
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    log_path = 'print_shop_logs.csv'
+    temp_report_path = os.path.join('uploads', f"Report_{shop_id}_{today_date}.csv")
+    
+    if os.path.exists(log_path):
+        with open(log_path, mode='r', newline='') as file:
+            reader = csv.DictReader(file)
+            # Filter rows where 'Shop' matches the logged-in ID and date is today
+            filtered_data = [row for row in reader if row['Shop'] == shop_id and row['Timestamp'].startswith(today_date)]
+        
+        if not filtered_data:
+            return "No records found for your shop today.", 404
+
+        # Write the filtered data to a temporary file for the user
+        keys = filtered_data[0].keys()
+        with open(temp_report_path, 'w', newline='') as output_file:
+            dict_writer = csv.DictWriter(output_file, fieldnames=keys)
+            dict_writer.writeheader()
+            dict_writer.writerows(filtered_data)
+        
+        return send_file(temp_report_path, as_attachment=True)
+    
+    return "Log file not found.", 404
 
 @app.route('/drop/<shop_id>', methods=['POST'])
 def smart_drop(shop_id):
