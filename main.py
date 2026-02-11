@@ -1,7 +1,7 @@
 import os, threading, uuid, random, time, csv
 from datetime import datetime, timezone, timedelta, date
 from flask import Flask, request, render_template, redirect, url_for, jsonify, send_file, abort,flash, session
-from app.models import db, PrintJob
+from app.models import db, PrintJob , Shop
 from app.utils.sanitizer import save_file_safely
 from app.utils.converter import convert_to_pdf
 from config import Config
@@ -123,22 +123,41 @@ def handle_registration():
 def handle_registration():
     if request.method == 'POST':
         try:
+            # Fetch form data
             shop_name = request.form.get('shop_name')
+            owner_name = request.form.get('owner_name')  # added
+            email = request.form.get('email')            # added
             phone = request.form.get('phone')
-            
+            address = request.form.get('address')        # added
+            dob = request.form.get('dob')                 # added
+
             if not request.form.get('agreement'):
                 return jsonify({"status": "error", "message": "You must accept the terms"}), 400
 
             new_shop_id = generate_station_id(phone)
-            
-            # Use registration_success.html as intended
+
+            # Save to Database
+            new_shop = Shop(
+                shop_id=new_shop_id,
+                shop_name=shop_name,
+                owner_name=owner_name,
+                email=email,
+                phone=phone,
+                address=address,
+                dob=dob
+            )
+            db.session.add(new_shop)
+            db.session.commit()
+
+            # Render success page
             return render_template('shop/registration_success.html', 
                                    shop_id=new_shop_id, 
                                    shop_name=shop_name)
         except Exception as e:
+            db.session.rollback()  # rollback in case of error
             return jsonify({"status": "error", "message": str(e)}), 500
-            
-    # Renders the registration form for GET requests
+
+    # Render registration form for GET requests
     return render_template('shop/register.html')
 
 @app.route('/drop/<string:shop_id>', methods=['GET'])
@@ -161,6 +180,16 @@ def shop_login():
             
     # This renders the sheet. If this file is empty or missing, you see white.
     return render_template('shop/login.html')
+
+@app.route('/debug/shops')
+def debug_shops():
+    # Fetch all registered shops from the DB
+    shops = Shop.query.all()
+    return jsonify([{
+        "name": s.shop_name, 
+        "id": s.shop_id, 
+        "phone": s.phone
+    } for s in shops])
 
 @app.route('/drop/<shop_id>', methods=['POST'])
 def smart_drop(shop_id):
@@ -229,7 +258,7 @@ def shop_dashboard():
         expiry = j.expires_at.replace(tzinfo=timezone.utc)
         j.minutes_left = max(0, int((expiry - now).total_seconds() / 60))
     return render_template('shop/dashboard.html', jobs=jobs)
-
+    
 @app.route('/api/active-jobs')
 def get_active_jobs():
     jobs = PrintJob.query.filter_by(status='pending').order_by(PrintJob.created_at.desc()).all()
@@ -241,6 +270,11 @@ def get_active_jobs():
         "file_path": j.file_path,
         "time_left": f"{max(0, int((j.expires_at.replace(tzinfo=timezone.utc)-now).total_seconds()/60))}m"
     } for j in jobs])
+    
+@app.route('/shop/logout')
+def logout():
+    session.clear() # Clears the 13-digit ID from memory
+    return redirect(url_for('shop_login'))
 
 @app.route('/download/<filename>')
 def download_file(filename):
